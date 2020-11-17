@@ -18,7 +18,7 @@ def read(*parts):
 def get_version():
     """Get current version from code."""
     regex = r"__version__\s=\s\"(?P<version>[\d\.]+?)\""
-    path = ("elgato", "__version__.py")
+    path = ("aqman", "__version__.py")
     return re.search(regex, read(*path)).group("version")
 
 
@@ -34,6 +34,9 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/hkder/python-aqman",
+    include_package_data=True,
+    install_requires=["aiohttp>=3.0.0", "attrs>=19.0.0", "yarl"],
+    license="MIT license",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.7",
@@ -42,4 +45,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
+    zip_safe=False,
 )

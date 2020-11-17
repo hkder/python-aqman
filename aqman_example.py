@@ -8,7 +8,7 @@ DEVICEID = ''
 
 
 async def main():
-    """Show example on controlling your Elgato Key Light device."""
+    """Show example on controlling your AQMAN101"""
     async with Aqman(ID, PASSWORD, DEVICEID) as aqman:
         state: DeviceState = await aqman.state()
         print(state)
