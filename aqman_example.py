@@ -1,5 +1,5 @@
-from aqman.aqman import Aqman
-from aqman.models import DeviceState
+from aqman import Aqman
+from aqman import DeviceState
 import asyncio
 
 ID = ''
