@@ -35,7 +35,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/hkder/python-aqman",
     include_package_data=True,
-    install_requires=["aiohttp>=3.0.0", "attrs>=19.0.0", "yarl"],
+    install_requires=["aiohttp>=3.0.0", "attrs>=19.0.0", "yarl>=1.0.0"],
     license="MIT license",
     packages=find_packages(),
     classifiers=[
