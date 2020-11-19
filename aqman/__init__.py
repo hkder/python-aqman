@@ -1,4 +1,4 @@
 """Asynchronous Python client for AQMAN101 from RadonFTLabs"""
 
-from .aqman import Aqman, AqmanConnectionError, AqmanError
-from .models import DeviceState
+from .aqman import AqmanUser, AqmanDevice, AqmanConnectionError, AqmanError
+from .models import Device, UserInfo
