@@ -25,7 +25,6 @@ class AqmanUser:
             session: aiohttp.ClientSession = None):
         """Initialize the AqmanUser class"""
         self._session = session
-        self._close_session = False
 
         self._id = id
         self._password = password
@@ -47,7 +46,6 @@ class AqmanUser:
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
-            self._close_session = True
 
         try:
             with async_timeout.timeout(self._request_timeout):
@@ -99,7 +97,7 @@ class AqmanUser:
 
     async def close(self) -> None:
         """Close open client session."""
-        if self._session and self._close_session:
+        if self._session:
             await self._session.close()
 
     async def __aenter__(self) -> "Aqman":
@@ -124,7 +122,6 @@ class AqmanDevice:
             session: aiohttp.ClientSession = None) -> None:
         """Initialize Connection with AQMAN101"""
         self._session = session
-        self._close_session = False
 
         self._id = id
         self._password = password
@@ -147,7 +144,6 @@ class AqmanDevice:
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
-            self._close_session = True
 
         try:
             with async_timeout.timeout(self._request_timeout):
@@ -199,7 +195,7 @@ class AqmanDevice:
 
     async def close(self) -> None:
         """Close open client session."""
-        if self._session and self._close_session:
+        if self._session:
             await self._session.close()
 
     async def __aenter__(self) -> "Aqman":
