@@ -2,6 +2,7 @@
 import asyncio
 import socket
 from typing import Any, Optional, List
+import subprocess
 
 import aiohttp
 import async_timeout
@@ -117,7 +118,7 @@ class AqmanDevice:
             id: str = None,
             password: str = None,
             deviceid: str = None,
-            host: str = BASE_URL,
+            host: str = None,
             request_timeout: int = 10,
             session: aiohttp.ClientSession = None) -> None:
         """Initialize Connection with AQMAN101"""
@@ -126,21 +127,20 @@ class AqmanDevice:
         self._id = id
         self._password = password
         self._deviceid = deviceid
-        self._host = host
+        out = subprocess.Popen(['hostname -I | awk "{print $1}"'],
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout, stderr = out.communicate()
+        self._host = str(stdout) + '/api'
         self._request_timeout = request_timeout
-        self._token = None
 
-    async def _request(self, uri: str, data: Optional[dict] = None,) -> Any:
+    async def _request(self, uri: str, data: str,) -> Any:
         """Handle a request to a Aqman101"""
-        url = URL.build(scheme="https", host=self._host, path=f"/{uri}")
+        url = URL.build(scheme="https", host=self._host, path=f"/{uri}/{data}")
 
         if uri == "login":
             method = "POST"
         else:
             method = "GET"
-            headers = {
-                "Token": f"{self._token}"
-            }
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
@@ -153,7 +153,7 @@ class AqmanDevice:
                     )
                 elif method == "GET":
                     response = await self._session.request(
-                        method, str(url), params=data, headers=headers
+                        method, str(url)
                     )
                 response.raise_for_status()
         except asyncio.TimeoutError as exception:
@@ -179,18 +179,9 @@ class AqmanDevice:
 
         return await response.json()
 
-    async def token(self) -> str:
-        """Get the token for current session of Aqman101"""
-        data = await self._request("login", data={"id": self._id, "password": self._password})
-        web_token = data['tokenWeb']
-        self._token = web_token
-        return web_token
-
     async def state(self) -> Device:
         """Get the current state of Aqman101"""
-        if self._token is None:
-            await self.token()
-        data = await self._request("devices", data={"sn": self._deviceid})
+        data = await self._request("device", self._deviceid)
         return Device.from_dict(data)
 
     async def close(self) -> None:
