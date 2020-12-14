@@ -127,15 +127,18 @@ class AqmanDevice:
         self._id = id
         self._password = password
         self._deviceid = deviceid
-        out = subprocess.Popen(['hostname -I | awk "{print $1}"'],
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out = subprocess.Popen(['/sbin/ip route | awk "NR==1"'],
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         stdout, stderr = out.communicate()
-        self._host = str(stdout) + '/api'
+        stdout = stdout.decode('utf-8')
+        stdout = stdout.split(' ')[7]
+        self._host = str(stdout) + ':8297/api'
         self._request_timeout = request_timeout
 
     async def _request(self, uri: str, data: str,) -> Any:
         """Handle a request to a Aqman101"""
-        url = URL.build(scheme="https", host=self._host, path=f"/{uri}/{data}")
+        # Scheme is HTTP!!
+        url = URL.build(scheme="http", host=self._host, path=f"/{uri}/{data}")
 
         if uri == "login":
             method = "POST"
