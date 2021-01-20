@@ -52,10 +52,10 @@ class UserInfo:
     device_cnt: int
 
     @staticmethod
-    def from_list(data: List[Dict]):
+    def from_list(data: List[str]):
         device_list: List[str] = []
 
         for device in data:
-            device_list.append(device['sn'])
+            device_list.append(device)
 
         return UserInfo(device_list, len(device_list))

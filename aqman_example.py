@@ -2,15 +2,12 @@ from aqman import AqmanUser, AqmanDevice
 from aqman import UserInfo, Device
 import asyncio
 
-ID = ''
-PASSWORD = ''
-
 
 async def main():
     """Show example on controlling your AQMAN101"""
     devices = []
 
-    async with AqmanUser(ID, PASSWORD) as aqmanuser:
+    async with AqmanUser() as aqmanuser:
         info: UserInfo = await aqmanuser.devices_info()
         print(info)
         devices = info.devices

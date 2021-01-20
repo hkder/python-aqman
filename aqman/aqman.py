@@ -87,7 +87,7 @@ class AqmanUser:
     async def devices_info(self) -> List[str]:
         """Get the list of serial numbers for current user of Aqman101"""
         data = await self._request("devices")
-        return UserInfo.from_list(data)
+        return UserInfo.from_list(data['devices'])
 
     async def close(self) -> None:
         """Close open client session."""
