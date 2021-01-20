@@ -161,9 +161,28 @@ class AqmanDevice:
             aiohttp.ClientResponseError,
             socket.gaierror,
         ) as exception:
-            raise AqmanConnectionError(
-                "Error occurred while communicating with Aqman 101"
-            ) from exception
+            from datetime import datetime
+
+            now = datetime.now()
+
+            current_time = now.strftime("%Y/%m/%d, %H:%M:%S")
+            error_data = {
+                "sn": data,
+                "dsm101_sn": "",
+                "dt": current_time,
+                "temp": -2,
+                "humi": -2,
+                "co2": -2,
+                "pm1": -2,
+                "pm2d5": -2,
+                "pm10": -2,
+                "radon": -2,
+                "tvoc": -2,
+            }
+            return error_data
+            # raise AqmanConnectionError(
+            #     "Error occurred while communicating with Aqman 101"
+            # ) from exception
 
         content_type = response.headers.get("Content-Type", "")
         if "application/json" not in content_type:
