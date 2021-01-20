@@ -48,16 +48,14 @@ class Device:
 class UserInfo:
     """Object holding the user information of Aqman101 user"""
 
-    username: str
-    password: str
     devices: List[str]
     device_cnt: int
 
     @staticmethod
-    def from_list(username: str, password: str, data: List[Dict]):
+    def from_list(data: List[Dict]):
         device_list: List[str] = []
 
         for device in data:
             device_list.append(device['sn'])
 
-        return UserInfo(username, password, device_list, len(device_list))
+        return UserInfo(device_list, len(device_list))

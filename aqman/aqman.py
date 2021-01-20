@@ -11,7 +11,8 @@ from yarl import URL
 from .__version__ import __version__
 from .exceptions import AqmanError, AqmanConnectionError
 from .models import Device, UserInfo
-from .const import BASE_URL
+from .const import BASE_URL, SUPPORTED_INTERFACES
+from .utils import get_ip_address, get_interfaces
 
 
 class AqmanUser:
@@ -19,45 +20,46 @@ class AqmanUser:
 
     def __init__(
             self,
-            id: str = None,
-            password: str = None,
-            host: str = BASE_URL,
+            host: str = None,
+            port: int = 8297,
             request_timeout: int = 10,
             session: aiohttp.ClientSession = None):
         """Initialize the AqmanUser class"""
         self._session = session
-
-        self._id = id
-        self._password = password
         self._host = host
+        self._port = port
         self._request_timeout = request_timeout
-        self._token = None
+        self._interfaces = None
+        self._host_ip = None
+
+        # Sets the variables _interfaces, _host_ip, and _host
+        self._find_host_ip()
+
+    def _find_host_ip(self):
+        interfaces = get_interfaces()
+        self._interfaces = interfaces
+
+        for interface in SUPPORTED_INTERFACES:
+            if interface in interfaces:
+                ip_address = get_ip_address(interface)
+                self._host_ip = ip_address
+                break
+
+        self._host = f"{ip_address}:{self._port}/api"
 
     async def _request(self, uri: str, data: Optional[dict] = None,) -> Any:
         """Handle a request to a Aqman101"""
-        url = URL.build(scheme="https", host=self._host, path=f"/{uri}")
-
-        if uri == "login":
-            method = "POST"
-        else:
-            method = "GET"
-            headers = {
-                "Token": f"{self._token}"
-            }
+        url = URL.build(scheme="http", host=self._host, path=f"/{uri}")
+        method = "GET"
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
 
         try:
             with async_timeout.timeout(self._request_timeout):
-                if method == "POST":
-                    response = await self._session.request(
-                        method, str(url), json=data,
-                    )
-                elif method == "GET":
-                    response = await self._session.request(
-                        method, str(url), params=data, headers=headers
-                    )
+                response = await self._session.request(
+                    method, str(url)
+                )
                 response.raise_for_status()
         except asyncio.TimeoutError as exception:
             raise AqmanConnectionError(
@@ -82,19 +84,10 @@ class AqmanUser:
 
         return await response.json()
 
-    async def token(self) -> str:
-        """Get the token for current session of Aqman101"""
-        data = await self._request("login", data={"id": self._id, "password": self._password})
-        web_token = data['tokenWeb']
-        self._token = web_token
-        return web_token
-
     async def devices_info(self) -> List[str]:
         """Get the list of serial numbers for current user of Aqman101"""
-        if self._token == None:
-            await self.token()
-        data = await self._request("devices", data={"customerId": self._id})
-        return UserInfo.from_list(self._id, self._password, data)
+        data = await self._request("devices")
+        return UserInfo.from_list(data)
 
     async def close(self) -> None:
         """Close open client session."""
@@ -115,49 +108,49 @@ class AqmanDevice:
 
     def __init__(
             self,
-            id: str = None,
-            password: str = None,
             deviceid: str = None,
             host: str = None,
+            port: int = 8297,
             request_timeout: int = 10,
             session: aiohttp.ClientSession = None) -> None:
         """Initialize Connection with AQMAN101"""
-        self._session = session
-
-        self._id = id
-        self._password = password
         self._deviceid = deviceid
-        out = subprocess.Popen(['/sbin/ip route | awk "NR==1"'],
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        stdout, stderr = out.communicate()
-        stdout = stdout.decode('utf-8')
-        stdout = stdout.split(' ')[7]
-        self._host = str(stdout) + ':8297/api'
+        self._session = session
+        self._host = host
+        self._port = port
         self._request_timeout = request_timeout
+        self._interfaces = None
+        self._host_ip = None
+
+        # Sets the variables _interfaces, _host_ip, and _host
+        self._find_host_ip()
+
+    def _find_host_ip(self):
+        interfaces = get_interfaces()
+        self._interfaces = interfaces
+
+        for interface in SUPPORTED_INTERFACES:
+            if interface in interfaces:
+                ip_address = get_ip_address(interface)
+                self._host_ip = ip_address
+                break
+
+        self._host = f"{ip_address}:{self._port}/api"
 
     async def _request(self, uri: str, data: str,) -> Any:
         """Handle a request to a Aqman101"""
         # Scheme is HTTP!!
         url = URL.build(scheme="http", host=self._host, path=f"/{uri}/{data}")
-
-        if uri == "login":
-            method = "POST"
-        else:
-            method = "GET"
+        method = "GET"
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
 
         try:
             with async_timeout.timeout(self._request_timeout):
-                if method == "POST":
-                    response = await self._session.request(
-                        method, str(url), json=data,
-                    )
-                elif method == "GET":
-                    response = await self._session.request(
-                        method, str(url)
-                    )
+                response = await self._session.request(
+                    method, str(url)
+                )
                 response.raise_for_status()
         except asyncio.TimeoutError as exception:
             raise AqmanConnectionError(
